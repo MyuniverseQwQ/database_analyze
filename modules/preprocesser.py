@@ -76,8 +76,8 @@ class DataPreprocessor:
         # Выявленные проблемы
         print("\nВЫЯВЛЕННЫЕ ПРОБЛЕМЫ:")
         print(
-            "1. Пропуски: loan_int_rate (450 шт., 1.38%), "
-            "person_emp_length (896 шт., 2.75%)"
+            "1. Пропуски: loan_int_rate (3116 шт., 9.56%), "
+            "person_emp_length (895 шт., 2.75%)"
         )
         print(
             "2. Выбросы: person_age = 144 года, "
@@ -87,26 +87,6 @@ class DataPreprocessor:
             "3. Несогласованность форматов: "
             "cb_person_default_on_file (Y/N), loan_grade (A-G)"
         )
-        return self
-
-    def remove_outliers(self):
-        """
-        Удаление выбросов из данных
-        """
-        print("\n--- УДАЛЕНИЕ ВЫБРОСОВ ---")
-        rows_before = len(self.df)
-        self.df = self.df[self.df["person_age"] <= 100]
-        self.df = self.df[
-            self.df["person_emp_length"]
-            <= (self.df["person_age"] - 16)
-        ]
-        self.df = self.df[
-            (self.df["person_income"] > 0) & (self.df["loan_amnt"] > 0)
-        ]
-
-        rows_removed = rows_before - len(self.df)
-        print(f"Удалено строк: {rows_removed}")
-
         return self
 
     def fill_missing_values(self):
@@ -128,7 +108,30 @@ class DataPreprocessor:
             self.df['loan_int_rate'].median()
         )
 
-        print(f"Пропусков после обработки: {self.df.isnull().sum().sum()}")
+        print(f"Пропусков после заполнения: {self.df.isnull().sum().sum()}")
+
+        return self
+
+    def remove_outliers(self):
+        """
+        Удаление выбросов из данных
+        """
+        print("\n--- УДАЛЕНИЕ ВЫБРОСОВ ---")
+        rows_before = len(self.df)
+        
+        # Логические условия для удаления выбросов
+        self.df = self.df[self.df["person_age"] <= 100]
+        self.df = self.df[
+            self.df["person_emp_length"]
+            <= (self.df["person_age"] - 16)
+        ]
+        self.df = self.df[
+            (self.df["person_income"] > 0) & (self.df["loan_amnt"] > 0)
+        ]
+
+        rows_removed = rows_before - len(self.df)
+        print(f"Удалено строк с выбросами: {rows_removed}")
+        print(f"Осталось строк после удаления: {len(self.df)}")
 
         return self
 
@@ -251,8 +254,8 @@ class DataPreprocessor:
         print("НАЧАЛО ПРЕДОБРАБОТКИ ДАННЫХ")
         print("=" * 60)
 
-        self.remove_outliers()
         self.fill_missing_values()
+        self.remove_outliers()
         self.encode_categorical_features()
         self.create_features()
         self.get_results()
